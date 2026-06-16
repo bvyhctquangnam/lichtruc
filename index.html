@@ -2,371 +2,72 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Lịch trực Bệnh viện</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lịch trực Bệnh viện YHCT Quảng Nam</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-        :root { --primary: #00008B; --primary-soft: #eff6ff; --secondary: #64748b; --sunday: #be123c; --bg-site: #f8fafc; --text-dark: #000000; --border-color: darkblue; }
-        body { font-family: 'Inter', sans-serif; background-color: white; margin: 0; padding: 0px 5px; color: var(--text-dark); -webkit-font-smoothing: antialiased; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 0px; }
-        h2 { font-weight: 800; font-size: 26px; color: var(--primary); text-align: center; text-transform: uppercase; margin-bottom: 0px; }
-        h3 { font-weight: 500; font-size: 20px; color: var(--primary); text-align: center; margin-bottom: 10px; margin-top: 5px; }
-        .toolbar { display: flex; gap: 15px; padding: 0px; background: white; margin-bottom: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
-        table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-color); }
-        th { background: var(--primary); color: white; padding: 5px 5px; font-weight: 700; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
-        .dept-col { background: #f8fafc; color: var(--primary); font-weight: 700; width: 160px; text-align: left; padding-left: 20px; border-right: 2px solid darkblue; font-size: 14px; }
-        td { border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); padding: 12px 10px; font-size: 14px; background: white; transition: 0.2s; }
-        tr:hover td { background-color: #fdfdfd; }
-        .btn { padding: 10px 22px; border-radius: 10px; font-size: 14px; font-weight: 600; transition: all 0.3s; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-        .btn:active { transform: scale(0.95); }
-        .btn-save { background: #10b981; color: white; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
-        .btn-save:hover { background: #059669; }
-        .btn-print { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(30, 64, 175, 0.2); }
-        #lockBtn { background: white; color: var(--text-dark); border: 1px solid #cbd5e1; }
-        #lockBtn:hover { background: #f8fafc; border-color: var(--primary); }
-        th:nth-last-child(2),th:last-child { background: var(--sunday); }
-        #startDate { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-weight: 600; color: var(--primary); }
-        .status-bar { position: fixed; bottom: 10px; right: 10px; font-size: 11px; color: #999; background: white; padding: 5px 10px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 999; }
-        @media print { .toolbar, #lockBtn, .status-bar { display: none !important; } }
-        /* ===== HEADER 3 CỘT ===== */
-        .header-three-cols {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-            margin-top: 15px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .col-left { flex: 1; display: flex; justify-content: flex-start; }
-        .col-center { flex: 4; text-align: center; }
-        .col-right { flex: 1; display: flex; justify-content: flex-end; }
-        .logo-container { width: 110px; border-radius: 50%; }
-        .main-logo { width: 100%; height: auto; display: block; border-radius: 50%; }
-        .hospital-title { font-weight: 800; font-size: 24px; color: var(--primary); text-transform: uppercase; margin: 0 0 8px 0; line-height: 1.3; }
-        .action-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 8px; flex-wrap: wrap; }
-        .clock-widget { text-align: center; display: inline-flex; flex-direction: column; align-items: center; min-width: 170px; padding: 0px 0px; }
-        .clock-date { font-size: 12px; font-weight: 600; color: #000000; }
-        .clock-time { font-size: 27px; font-weight: 700; color: #00008B; }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        /* Fallback khi iframe chưa tải xong */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 18px;
+            color: #00008B;
+            z-index: 999;
+            transition: opacity 0.5s ease;
+        }
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .loading .spinner {
+            width: 40px;
+            height: 40px;
+            margin-right: 16px;
+            border: 4px solid #e0e7ff;
+            border-top-color: #00008B;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header-three-cols">
-        <div class="col-left">
-            <div class="logo-container">                
-                <a href="https://drive.google.com/file/d/17yiJanUmojmu4AkiGIJOFhVvhWawVmT_/view">
-                    <img src="https://lh3.googleusercontent.com/pw/AP1GczO7XfkPEq72Py7EcIylP2QjN4T2DFIAIr8cePoEg8YEZvt7Va7bdj9YqXiufxo-HhuH70TmBfQ06F28KWQwoW0aQPtFzzUKtfx3foD1rF8GPAygeq3UTU_g47b1xf8YUciYDsS95przdNhO1wiL9Tui=w859-h813-s-no-gm?authuser=0" alt="Logo Bệnh viện YHCT Quảng Nam" class="main-logo">
-                </a>                
-            </div>
-        </div>
-        
-        <div class="col-center">
-            <div class="hospital-title">BỆNH VIỆN Y HỌC CỔ TRUYỀN QUẢNG NAM</div>
-            <h3 id="title">LỊCH TRỰC TUẦN</h3>
-            <div class="action-buttons">
-                <div class="inline-date-input">
-                    <strong>📅 Ngày bắt đầu:</strong> 
-                    <input type="date" id="startDate" onchange="onDateChange()">
-                </div>
-                <button id="lockBtn" class="btn" onclick="unlockAdmin()">🔒 SỬA</button>                
-                <div id="adminGroup" style="display: none; gap: 12px;">
-                    <button class="btn btn-save" onclick="saveData(event)">💾 LƯU DỮ LIỆU TUẦN NÀY</button>
-                    <button id="btnArchive" class="btn" style="background: #ef4444;" onclick="archiveData()">📦 CHỐT & TẠO SHEET</button>
-                </div>
-                <button class="btn btn-print" onclick="window.print()">🖨️ IN LỊCH</button>
-            </div>
-        </div>
-        
-        <div class="col-right">
-            <div class="clock-widget" id="liveClock">
-                <div class="clock-date" id="currentDate">--/--/----</div>
-                <div class="clock-time" id="currentTime">--:--:--</div>
-            </div>
-        </div>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <span>Đang tải lịch trực...</span>
     </div>
 
-    <table>
-        <thead>
-            <tr id="headerRow">
-                <th class="dept-col">Phiên trực</th>
-                <th>Thứ 2</th><th>Thứ 3</th><th>Thứ 4</th><th>Thứ 5</th><th>Thứ 6</th><th>Thứ 7</th><th>Chủ nhật</th>
-            </tr>
-        </thead>
-        <tbody id="matrixBody"></tbody>
-    </table>
-</div>
+    <iframe
+        src="https://script.google.com/macros/s/AKfycbwjnZ9aLaSRGZBQRAGEDgSlw1r-Rd5GjUWmlxGFIZMFJrCGkFJ14Hytv4tHgFwxvJWk/exec"
+        onload="document.getElementById('loading').classList.add('hidden')"
+        onerror="document.getElementById('loading').innerHTML = '⚠️ Không thể tải trang. Vui lòng kiểm tra kết nối hoặc thử lại sau.'"
+    ></iframe>
 
-<div class="status-bar" id="statusBar">👁️ Chế độ xem - Tự động cập nhật mỗi 30 giây</div>
-
-<script>
-    var schedule = {};
-    var staffList = {}; 
-    var hasEditPermission = false;
-    var isEditing = false;
-    var autoRefreshInterval = null;
-    var currentStartDateObj = null;
-    
-    window.onload = function() {
-        setInitialDate();
-        loadStaffList();
-        loadDataForSelectedDate();
-        startAutoRefresh();
-        startRealTimeClock();
-    };
-    
-    function setInitialDate() {
-        var today = new Date();
-        var day = today.getDay();
-        var diff = today.getDate() - day + (day == 0 ? -6 : 1);
-        var monday = new Date(today.setDate(diff));
-        var yyyy = monday.getFullYear();
-        var mm = String(monday.getMonth() + 1).padStart(2, '0');
-        var dd = String(monday.getDate()).padStart(2, '0');
-        document.getElementById('startDate').value = yyyy + '-' + mm + '-' + dd;
-        currentStartDateObj = new Date(yyyy, mm - 1, dd);
-        updateHeaderDates(currentStartDateObj);
-    }
-    
-    function onDateChange() {
-        var dateStr = document.getElementById('startDate').value;
-        if(dateStr) {
-            var parts = dateStr.split('-');
-            var d = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            currentStartDateObj = d;
-            updateHeaderDates(d);
-            loadDataForSelectedDate();
-        }
-    }
-    
-    function updateHeaderDates(startDateObj) {
-        var headerRow = document.getElementById('headerRow');
-        headerRow.innerHTML = '<th class="dept-col">Phiên trực</th>';
-        var days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "Chủ nhật"];
-        
-        var fmt = function(d) {
-            var dd = String(d.getDate()).padStart(2, '0');
-            var mm = String(d.getMonth() + 1).padStart(2, '0');
-            var yyyy = d.getFullYear();
-            return dd + '/' + mm + '/' + yyyy;
-        };
-        
-        for(var i = 0; i < 7; i++) {
-            var d = new Date(startDateObj);
-            d.setDate(startDateObj.getDate() + i);
-            var dd = String(d.getDate()).padStart(2, '0');
-            var mm = String(d.getMonth() + 1).padStart(2, '0');
-            headerRow.innerHTML += '<th>' + days[i] + '<br>' + dd + '/' + mm + '</th>';
-        }
-        var end = new Date(startDateObj);
-        end.setDate(startDateObj.getDate() + 6);
-        document.getElementById('title').innerHTML = 'LỊCH TRỰC TUẦN: ' + fmt(startDateObj) + ' - ' + fmt(end);
-    }
-    
-    function startAutoRefresh() {
-        if (autoRefreshInterval) clearInterval(autoRefreshInterval);
-        
-        if (!hasEditPermission) {
-            autoRefreshInterval = setInterval(function() {
-                if (!isEditing) {
-                    loadDataForSelectedDate();
-                }
-            }, 30000);
-            var statusBar = document.getElementById('statusBar');
-            if (statusBar) statusBar.innerHTML = '👁️ Chế độ xem - Tự động cập nhật mỗi 30 giây';
-        } else {
-            var statusBar = document.getElementById('statusBar');
-            if (statusBar) statusBar.innerHTML = '✏️ Chế độ sửa - Chỉ cập nhật khi bấm LƯU';
-        }
-    }
-    
-    function stopAutoRefresh() {
-        if (autoRefreshInterval) {
-            clearInterval(autoRefreshInterval);
-            autoRefreshInterval = null;
-        }
-    }
-    
-    function loadStaffList() {
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(function(staffData) {
-                try {
-                    staffList = JSON.parse(staffData);
-                } catch(e) {
-                    staffList = {};
-                }
-                render();
-            }).getStaffList();
-        }
-    }
-    
-    function loadDataForSelectedDate() {
-        var dateStr = document.getElementById('startDate').value;
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(function(data) {
-                try {
-                    if (data && data !== "") {
-                        var parsedData = JSON.parse(data);
-                        if (typeof parsedData === 'object' && parsedData !== null) {
-                            schedule = parsedData;
-                        } else {
-                            schedule = {};
-                        }
-                    } else {
-                        schedule = {};
-                    }
-                } catch(e) {
-                    schedule = {};
-                }
-                if (Object.keys(schedule).length === 0) {
-                    createEmptySchedule(); 
-                }
-                render();
-            }).getScheduleByDate(dateStr);
-        }
-    }
-    
-    function createEmptySchedule() {
-        var depts = Object.keys(staffList);
-        if (depts.length === 0) {
-            depts = ["Lãnh đạo", "Bác sĩ", "Khoa Nội", "Khoa Ngoại", "Khoa Lão", "Khoa Châm cứu", "Khoa PHCN", "Khoa Dược", "Bảo vệ"];
-        }
-        schedule = {};
-        for (var d = 0; d < depts.length; d++) {
-            schedule[depts[d]] = ["", "", "", "", "", "", ""];
-        }
-    }
-    
-    function saveData(event) {
-        var dateStr = document.getElementById('startDate').value;
-        if (!dateStr) return alert("Vui lòng chọn ngày bắt đầu!");
-        
-        var saveBtn = event.target;
-        var originalText = saveBtn.innerText;
-        saveBtn.innerText = "💾 ĐANG LƯU...";
-        saveBtn.disabled = true;
-        
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(function() {
-                alert("✅ Đã lưu dữ liệu cho tuần bắt đầu ngày " + dateStr);
-                isEditing = false;
-                loadDataForSelectedDate();
-                saveBtn.innerText = originalText;
-                saveBtn.disabled = false;
-            }).withFailureHandler(function(error) {
-                alert("❌ Lưu thất bại: " + error.message);
-                saveBtn.innerText = originalText;
-                saveBtn.disabled = false;
-            }).saveScheduleByDate(dateStr, JSON.stringify(schedule));
-        }
-    }
-    
-    function unlockAdmin() {
-        var pass = prompt("Nhập mã bảo mật:");
-        if (pass === "123") { 
-            hasEditPermission = true;
-            var adminGroup = document.getElementById('adminGroup');
-            var lockBtn = document.getElementById('lockBtn');
-            if (adminGroup) adminGroup.style.display = 'flex';
-            if (lockBtn) lockBtn.style.display = 'none';
-            
-            stopAutoRefresh();
-            startAutoRefresh();
-            
-            render(); 
-            alert("🔓 Đã mở quyền chỉnh sửa! Dữ liệu chỉ cập nhật khi bạn bấm LƯU.");
-        } else {
-            alert("❌ Mã bảo mật không chính xác!");
-        }
-    }
-    
-    function archiveData() {
-        var dateStr = document.getElementById('startDate').value;
-        if (!confirm("Xác nhận tạo Sheet lưu trữ riêng cho tuần này?")) return;
-        
-        if (typeof google !== 'undefined' && google.script) {
-            google.script.run.withSuccessHandler(function(msg) {
-                alert("✅ " + msg);
-            }).archiveSheet(JSON.stringify(schedule), dateStr);
-        }
-    }
-    
-    function render() {
-        var tbody = document.getElementById('matrixBody');
-        if (!tbody) return;
-        tbody.innerHTML = "";
-        
-        var deptsToRender = Object.keys(schedule);
-        if (deptsToRender.length === 0) {
-            createEmptySchedule();
-            deptsToRender = Object.keys(schedule);
-        }
-        
-        for (var d = 0; d < deptsToRender.length; d++) {
-            var dept = deptsToRender[d];
-            var row = '<tr>';
-            row += '<td class="dept-col">' + dept + '</td>';
-            var options = staffList[dept] || [];
-            var weekData = schedule[dept] || ["", "", "", "", "", "", ""];
-            
-            for (var i = 0; i < 7; i++) {
-                var currentName = weekData[i] || "";
-                row += '<td>';
-                if (hasEditPermission) {
-                    if (options.length > 0) {
-                        row += '<select onfocus="isEditing=true" onblur="isEditing=false" onchange="updateVal(\'' + dept + '\', ' + i + ', this.value)" style="width:100%; border:none; background:transparent; text-align-last:center;">';
-                        row += '<option value="">-- Chọn --</option>';
-                        for (var opt = 0; opt < options.length; opt++) {
-                            var name = options[opt];
-                            var selected = (name === currentName) ? 'selected' : '';
-                            row += '<option value="' + name + '" ' + selected + '>' + name + '</option>';
-                        }
-                        if (currentName && options.indexOf(currentName) === -1) {
-                            row += '<option value="' + currentName + '" selected>' + currentName + '</option>';
-                        }
-                        row += '</select>';
-                    } else {
-                        row += '<input value="' + (currentName || '') + '" onfocus="isEditing=true" onblur="isEditing=false" onchange="updateVal(\'' + dept + '\', ' + i + ', this.value)" style="width:90%; text-align:center;">';
-                    }
-                } else {
-                    row += '<div style="text-align:center;">' + (currentName || "") + '</div>';
-                }
-                row += '</td>';
-            }
-            row += '</tr>';
-            tbody.innerHTML += row;
-        }
-    }
-    
-    function updateVal(dept, dayIdx, val) {
-        if(!schedule[dept]) schedule[dept] = ["", "", "", "", "", "", ""];
-        schedule[dept][dayIdx] = val;
-    }
-
-    function startRealTimeClock() {
-        updateClockDisplay();
-        setInterval(updateClockDisplay, 1000);
-    }
-
-    function updateClockDisplay() {
-        var now = new Date();
-        var days = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-        var dayName = days[now.getDay()];
-        var dd = String(now.getDate()).padStart(2, '0');
-        var mm = String(now.getMonth() + 1).padStart(2, '0');
-        var yyyy = now.getFullYear();
-        var dateStr = dayName + ", " + dd + "/" + mm + "/" + yyyy;
-        
-        var hours = String(now.getHours()).padStart(2, '0');
-        var minutes = String(now.getMinutes()).padStart(2, '0');
-        var seconds = String(now.getSeconds()).padStart(2, '0');
-        var timeStr = hours + ":" + minutes + ":" + seconds;
-        
-        var dateElem = document.getElementById('currentDate');
-        var timeElem = document.getElementById('currentTime');
-        if (dateElem) dateElem.innerText = dateStr;
-        if (timeElem) timeElem.innerText = timeStr;
-    }
-</script>
 </body>
 </html>
