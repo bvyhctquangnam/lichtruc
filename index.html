@@ -2,72 +2,136 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch trực Bệnh viện YHCT Quảng Nam</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Lịch trực (mobile view)</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%;
             height: 100%;
             overflow: hidden;
+            background: white;
         }
-        iframe {
+        #iframeWrapper {
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            position: relative;
+            overflow: hidden;
+        }
+        #mainFrame {
             width: 100%;
             height: 100%;
             border: none;
-            display: block;
+            transform-origin: top left;
+            /* transform sẽ được set bằng JS */
         }
-        /* Fallback khi iframe chưa tải xong */
         .loading {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #f8fafc;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            background: #f8fafc;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 18px;
-            color: #00008B;
             z-index: 999;
-            transition: opacity 0.5s ease;
+            font-family: system-ui, sans-serif;
         }
-        .loading.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-        .loading .spinner {
-            width: 40px;
-            height: 40px;
-            margin-right: 16px;
+        .loading.hide { display: none; }
+        .spinner {
+            width: 40px; height: 40px;
             border: 4px solid #e0e7ff;
             border-top-color: #00008B;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { margin-top: 16px; color: #1e293b; font-weight: 500; }
+        .error-msg {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            color: #b91c1c;
+            text-align: center;
         }
+        .loading.error .spinner, .loading.error .loading-text { display: none; }
+        .loading.error .error-msg { display: flex; }
+        .retry-btn { padding: 10px 28px; background: #00008B; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div class="loading" id="loading">
-        <div class="spinner"></div>
-        <span>Đang tải lịch trực...</span>
+<div id="iframeWrapper">
+    <iframe id="mainFrame" src="https://script.google.com/macros/s/AKfycbwjnZ9aLaSRGZBQRAGEDgSlw1r-Rd5GjUWmlxGFIZMFJrCGkFJ14Hytv4tHgFwxvJWk/exec" allowfullscreen></iframe>
+</div>
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Đang tải lịch...</div>
+    <div class="error-msg">
+        <span>⚠️ Không tải được nội dung.</span>
+        <button class="retry-btn" onclick="retry()">Thử lại</button>
     </div>
+</div>
+<script>
+    const frame = document.getElementById('mainFrame');
+    const loading = document.getElementById('loading');
 
-    <iframe
-        src="https://script.google.com/macros/s/AKfycbwjnZ9aLaSRGZBQRAGEDgSlw1r-Rd5GjUWmlxGFIZMFJrCGkFJ14Hytv4tHgFwxvJWk/exec"
-        onload="document.getElementById('loading').classList.add('hidden')"
-        onerror="document.getElementById('loading').innerHTML = '⚠️ Không thể tải trang. Vui lòng kiểm tra kết nối hoặc thử lại sau.'"
-    ></iframe>
+    function adjustZoom() {
+        const wrapper = document.getElementById('iframeWrapper');
+        const frame = document.getElementById('mainFrame');
+        // Lấy kích thước thực tế của iframe (sau khi load)
+        // Nhưng do same-origin policy, ta không thể đo nội dung bên trong iframe.
+        // Ta đo kích thước màn hình và áp dụng scale để nội dung 1000px vừa màn hình.
+        const screenWidth = window.innerWidth;
+        // Giả định nội dung iframe có chiều rộng tối thiểu 1000px (dựa trên bảng)
+        const contentWidth = 1000; 
+        let scale = screenWidth / contentWidth;
+        // Giới hạn scale không quá 1 (không phóng to hơn bình thường)
+        if (scale > 1) scale = 1;
+        // Đặt transform scale cho iframe
+        frame.style.transform = `scale(${scale})`;
+        frame.style.width = `${100 / scale}%`;
+        frame.style.height = `${100 / scale}%`;
+        // Điều chỉnh vị trí để căn giữa
+        frame.style.transformOrigin = 'top left';
+        // Có thể cần thêm margin left để căn giữa
+        const extra = (100 - 100/scale) / 2;
+        frame.style.marginLeft = `-${extra}%`;
+    }
 
+    // Gọi khi load xong hoặc resize
+    frame.addEventListener('load', function() {
+        loading.classList.add('hide');
+        adjustZoom();
+    });
+
+    // Nếu lỗi
+    frame.addEventListener('error', function() {
+        loading.classList.add('error');
+    });
+
+    // Fallback timeout
+    let timeout = setTimeout(() => {
+        if (!loading.classList.contains('hide')) {
+            loading.classList.add('error');
+        }
+    }, 15000);
+
+    frame.addEventListener('load', function() { clearTimeout(timeout); });
+
+    function retry() {
+        loading.classList.remove('error', 'hide');
+        const src = frame.src;
+        frame.src = '';
+        setTimeout(() => { frame.src = src; }, 200);
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            if (!loading.classList.contains('hide')) loading.classList.add('error');
+        }, 15000);
+    }
+
+    // Điều chỉnh zoom khi xoay ngang/dọc
+    window.addEventListener('resize', adjustZoom);
+</script>
 </body>
 </html>
