@@ -1,10 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <link rel="preconnect" href="https://script.google.com">
-    <link rel="icon" href="./favicon.png" type="image/x-icon">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lịch trực Bệnh viện YHCT Quảng Nam</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,128 +10,135 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background: white;
+            background: #fff;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
         }
-        #iframeWrapper {
+        #mainFrame {
+            display: block;
             width: 100vw;
             height: 100vh;
             height: 100dvh;
-            position: relative;
-            overflow: hidden;
-        }
-        #mainFrame {
-            width: 100%;
-            height: 100%;
             border: none;
-            transform-origin: top left;
-            /* transform sẽ được set bằng JS */
         }
-        .loading {
+
+        /* Loading overlay */
+        #loading {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #f8fafc;
+            inset: 0;
+            background: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 999;
-            font-family: system-ui, sans-serif;
+            transition: opacity 0.35s ease;
         }
-        .loading.hide { display: none; }
+        #loading.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
         .spinner {
-            width: 40px; height: 40px;
+            width: 44px;
+            height: 44px;
             border: 4px solid #e0e7ff;
             border-top-color: #00008B;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { margin-top: 16px; color: #1e293b; font-weight: 500; }
+        .loading-text {
+            margin-top: 18px;
+            color: #1e293b;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        /* Error state */
         .error-msg {
             display: none;
             flex-direction: column;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             color: #b91c1c;
             text-align: center;
+            padding: 0 24px;
+            max-width: 420px;
         }
-        .loading.error .spinner, .loading.error .loading-text { display: none; }
-        .loading.error .error-msg { display: flex; }
-        .retry-btn { padding: 10px 28px; background: #00008B; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+        #loading.error .spinner,
+        #loading.error .loading-text { display: none; }
+        #loading.error .error-msg { display: flex; }
+        .error-msg p { line-height: 1.55; font-size: 14px; }
+        .retry-btn {
+            padding: 10px 28px;
+            background: #00008B;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .retry-btn:hover { background: #00006a; }
+        .retry-btn:active { transform: scale(0.97); }
     </style>
 </head>
 <body>
-<div id="iframeWrapper">
-    <iframe id="mainFrame" src="https://script.google.com/macros/s/AKfycbwjnZ9aLaSRGZBQRAGEDgSlw1r-Rd5GjUWmlxGFIZMFJrCGkFJ14Hytv4tHgFwxvJWk/exec" allowfullscreen></iframe>
-</div>
-<div class="loading" id="loading">
+
+<iframe id="mainFrame"
+        src="https://script.google.com/macros/s/AKfycbwKZsQPyJlpEn0g6cK53kAs5WX-DyDrU3-_RvrOyYs/exec"
+        allow="clipboard-write"
+        referrerpolicy="no-referrer-when-downgrade"></iframe>
+
+<div id="loading">
     <div class="spinner"></div>
     <div class="loading-text">Đang tải lịch trực...</div>
     <div class="error-msg">
-        <span>⚠️ Không tải được nội dung.</span>
+        <p>⚠️ Không tải được nội dung.<br>Vui lòng kiểm tra kết nối mạng hoặc thử lại.</p>
         <button class="retry-btn" onclick="retry()">Thử lại</button>
     </div>
 </div>
+
 <script>
+(function() {
     const frame = document.getElementById('mainFrame');
     const loading = document.getElementById('loading');
+    const TIMEOUT_MS = 20000;
+    let timeoutId = null;
+    let loaded = false;
 
-    function adjustZoom() {
-        const wrapper = document.getElementById('iframeWrapper');
-        const frame = document.getElementById('mainFrame');
-        // Lấy kích thước thực tế của iframe (sau khi load)
-        // Nhưng do same-origin policy, ta không thể đo nội dung bên trong iframe.
-        // Ta đo kích thước màn hình và áp dụng scale để nội dung 1000px vừa màn hình.
-        const screenWidth = window.innerWidth;
-        // Giả định nội dung iframe có chiều rộng tối thiểu 1000px (dựa trên bảng)
-        const contentWidth = 1000; 
-        let scale = screenWidth / contentWidth;
-        // Giới hạn scale không quá 1 (không phóng to hơn bình thường)
-        if (scale > 1) scale = 1;
-        // Đặt transform scale cho iframe
-        frame.style.transform = `scale(${scale})`;
-        frame.style.width = `${100 / scale}%`;
-        frame.style.height = `${100 / scale}%`;
-        // Điều chỉnh vị trí để căn giữa
-        frame.style.transformOrigin = 'top left';
-        // Có thể cần thêm margin left để căn giữa
-        const extra = (100 - 100/scale) / 2;
-        frame.style.marginLeft = `-${extra}%`;
-    }
-
-    // Gọi khi load xong hoặc resize
-    frame.addEventListener('load', function() {
+    function hideLoading() {
+        if (loaded) return;
+        loaded = true;
+        clearTimeout(timeoutId);
         loading.classList.add('hide');
-        adjustZoom();
-    });
-
-    // Nếu lỗi
-    frame.addEventListener('error', function() {
-        loading.classList.add('error');
-    });
-
-    // Fallback timeout
-    let timeout = setTimeout(() => {
-        if (!loading.classList.contains('hide')) {
-            loading.classList.add('error');
-        }
-    }, 15000);
-
-    frame.addEventListener('load', function() { clearTimeout(timeout); });
-
-    function retry() {
-        loading.classList.remove('error', 'hide');
-        const src = frame.src;
-        frame.src = '';
-        setTimeout(() => { frame.src = src; }, 200);
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-            if (!loading.classList.contains('hide')) loading.classList.add('error');
-        }, 15000);
     }
 
-    // Điều chỉnh zoom khi xoay ngang/dọc
-    window.addEventListener('resize', adjustZoom);
+    function showError() {
+        if (loaded) return;
+        loading.classList.add('error');
+    }
+
+    function startTimeout() {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(showError, TIMEOUT_MS);
+    }
+
+    // iframe cross-origin: load fire khi document cuối cùng render xong
+    frame.addEventListener('load', hideLoading);
+
+    window.retry = function() {
+        loaded = false;
+        loading.classList.remove('hide', 'error');
+        startTimeout();
+        // Force reload: xoá src rồi set lại
+        const src = frame.src;
+        frame.src = 'about:blank';
+        setTimeout(function() { frame.src = src; }, 200);
+    };
+
+    startTimeout();
+})();
 </script>
 </body>
 </html>
